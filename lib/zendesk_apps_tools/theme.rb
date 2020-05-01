@@ -22,7 +22,9 @@ module ZendeskAppsTools
       require 'faraday'
       full_upload
       callbacks_after_upload = [
-          ->() { touch_file_after_upload(options[:file_to_touch_after_upload]) }
+          ->(full_refresh) { 
+            touch_file_after_upload(options[:file_to_touch_after_upload], full_refresh) 
+          }
       ]
       start_listener(callbacks_after_upload)
       start_server(callbacks_after_upload)
@@ -63,10 +65,10 @@ module ZendeskAppsTools
         end
       end
 
-      def touch_file_after_upload(file)
+      def touch_file_after_upload(file, full_refresh)
         unless file.nil?
-          say_status "Touching", "#{file}"
-          FileUtils.touch file
+          say_status "Touching", "#{file}. Full Refresh: #{full_refresh}"
+          FileUtils.touch full_refresh ? "#{file}.html" : "#{file}.css"
         end
       end
 
@@ -86,7 +88,7 @@ module ZendeskAppsTools
             full_upload
           end
           callbacks_after_upload.each do |callback|
-            callback.call
+            callback.call need_upload
           end
         end
         listener.ignore /\.idea/
