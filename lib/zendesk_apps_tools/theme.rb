@@ -13,12 +13,17 @@ module ZendeskAppsTools
     method_option :port, default: Command::DEFAULT_SERVER_PORT, required: false, desc: 'Port for the http server to use.'
     method_option :bind, required: false
     method_option :livereload, type: :boolean, default: true, desc: 'Enable or disable live-reloading the preview when a change is made.'
+    method_option :file_to_touch_after_upload, type: :string, required: false, desc: 'Touches the provided file whenever an upload is done after file changes during preview mode.'
+    method_option :use_external_livereload, type: :boolean, default: false, desc: 'Injects additional livereload script to work with external livereload server running on port 35279.'
+    method_option :exclusions, type: :string, default:
     def preview
       setup_path(options[:path])
       ensure_manifest!
       require 'faraday'
       full_upload
-      callbacks_after_upload = []
+      callbacks_after_upload = [
+          ->() { touch_file_after_upload(options[:file_to_touch_after_upload]) }
+      ]
       start_listener(callbacks_after_upload)
       start_server(callbacks_after_upload)
     end
@@ -58,6 +63,13 @@ module ZendeskAppsTools
         end
       end
 
+      def touch_file_after_upload(file)
+        unless file.nil?
+          say_status "Touching", "#{file}"
+          FileUtils.touch file
+        end
+      end
+
       def start_listener(callbacks_after_upload)
         # TODO: do we need to stop the listener at some point?
         require 'listen'
@@ -77,6 +89,9 @@ module ZendeskAppsTools
             callback.call
           end
         end
+        listener.ignore /\.idea/
+        listener.ignore /\.vscode/
+        listener.ignore /\.zustatus/
         listener.start
       end
 
@@ -108,6 +123,10 @@ module ZendeskAppsTools
           <script src="http://localhost:4567/__rack/livereload.js?host=localhost"></script>
         html
 
+        ext_live_reload_script_tag = <<-html
+          <script src="http://localhost:35729/livereload.js?host=localhost"></script>
+        html
+
         js_tag = <<-html
           <script src="http://localhost:4567/guide/script.js"></script>
         html
@@ -120,7 +139,12 @@ module ZendeskAppsTools
         template << css_tag
         template << head_template
         template << js_tag
-        template << live_reload_script_tag
+        if options[:livereload]
+          template << live_reload_script_tag
+        end
+        if options[:use_external_livereload]
+          template << ext_live_reload_script_tag
+        end
         template.string
       end
 
