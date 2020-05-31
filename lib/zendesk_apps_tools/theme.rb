@@ -118,19 +118,22 @@ module ZendeskAppsTools
           script_location = 'footer'
         end
 
+
         payload['templates'] = templates_payload
         #inject tag in either document_head (theming_v1 based themes), or footer (theming_v2 based themes)
         payload['templates'][script_location] = inject_external_tags(payload['templates'][script_location],
                                                                      js_tag_hash['html'])
         payload['templates'][style_location] = inject_external_tags(payload['templates'][style_location],
                                                                     css_tag_hash['html'], true)
-        payload['templates'][livereload_location] = inject_external_tags(payload['templates'][livereload_location],
-                                                                         live_reload_script_tag_hash['html'])
-
-       if options[:use_external_livereload]
+        if options[:livereload]
           payload['templates'][livereload_location] = inject_external_tags(payload['templates'][livereload_location],
-                                                                           ext_live_reload_script_tag_hash['html'])
-       end
+                                                                           live_reload_js_tag_hash['html'])
+        end
+
+        if options[:use_external_livereload]
+          payload['templates'][livereload_location] = inject_external_tags(payload['templates'][livereload_location],
+                                                                           ext_live_reload_js_tag_hash['html'])
+        end
         payload['templates']['css'] = ''
         payload['templates']['js'] = ''
         payload['templates']['assets'] = assets(base_url)
@@ -143,7 +146,7 @@ module ZendeskAppsTools
         "http://localhost:#{options[:port]}"
       end
 
-      def live_reload_script_tag_hash
+      def live_reload_js_tag_hash
         { 'html' => <<-html
           <script type="text/javascript">
             RACK_LIVERELOAD_PORT = #{options[:port]};
@@ -167,7 +170,7 @@ module ZendeskAppsTools
         }
       end
 
-      def ext_live_reload_script_tag_hash
+      def ext_live_reload_js_tag_hash
         { 'html' => <<-html
           <script src="http://localhost:35729/livereload.js?host=localhost"></script>
           html
