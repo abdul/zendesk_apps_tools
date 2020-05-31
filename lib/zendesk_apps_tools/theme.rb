@@ -103,12 +103,17 @@ module ZendeskAppsTools
         payload = {}
         templates = Dir.glob(theme_package_path('templates/*.hbs')) + Dir.glob(theme_package_path('templates/*/*.hbs'))
         templates_payload = {}
+        inject_to = 'document_head' 
         templates.each do |template|
           identifier = template.match(IDENTIFIER_REGEX)['identifier'].to_s
           templates_payload[identifier] = File.read(template)
         end
+        puts "Hello"
+        if metadata_hash['api_version'] == 2
+          inject_to = 'footer'
+        end
         payload['templates'] = templates_payload
-        payload['templates']['document_head'] = inject_external_tags(payload['templates']['document_head'])
+        payload['templates'][inject_to] = inject_external_tags(payload['templates'][inject_to])
         payload['templates']['css'] = ''
         payload['templates']['js'] = ''
         payload['templates']['assets'] = assets
