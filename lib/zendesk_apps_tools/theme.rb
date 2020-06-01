@@ -173,7 +173,7 @@ module ZendeskAppsTools
 
       def ext_live_reload_js_tag_hash
         { 'html' => <<-html
-          <script src="http://localhost:#{options[:external_livereload_port]}/livereload.js?host=localhost"></script>
+          <script src="http://localhost:#{options[:external_livereload_port]}/livereload.js?host=localhost:#{options[:external_livereload_port]}"></script>
           html
         }
       end
