@@ -15,6 +15,7 @@ module ZendeskAppsTools
     method_option :livereload, type: :boolean, default: true, desc: 'Enable or disable live-reloading the preview when a change is made.'
     method_option :file_to_touch_after_upload, type: :string, required: false, desc: 'Touches the provided file whenever an upload is done after file changes during preview mode.'
     method_option :use_external_livereload, type: :boolean, default: false, desc: 'Injects additional livereload script to work with external livereload server running on port 35279.'
+    method_option :external_livereload_port, type: :numeric, default: 35729 , desc: 'External livereload port.'
     method_option :exclusions, type: :string, default:
     def preview
       setup_path(options[:path])
@@ -172,7 +173,7 @@ module ZendeskAppsTools
 
       def ext_live_reload_js_tag_hash
         { 'html' => <<-html
-          <script src="http://localhost:35729/livereload.js?host=localhost"></script>
+          <script src="http://localhost:#{options[:external_livereload_port]}/livereload.js?host=localhost"></script>
           html
         }
       end
